@@ -1,5 +1,9 @@
-// Mike Hayes
-// G#01165321
+/***
+ *
+ * GUI Driver Class for project
+ * Spawns window on run
+ *
+ */
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
@@ -24,6 +28,14 @@ public class cs450_part2_GUI extends Application
         launch(args);
     }
 
+    /***
+     *  Starts the GUI, prompts the manager to enter password.
+     *  If incorrect, exits GUI.
+     *  Else queries database to say hello to manager using their name.
+     * @param primaryStage
+     * @throws SQLException
+     * @throws IOException
+     */
     @Override
     public void start(Stage primaryStage) throws SQLException, IOException {
         primaryStage.setTitle("CS450 Project Part 2");
@@ -48,7 +60,7 @@ public class cs450_part2_GUI extends Application
         } catch (ClassNotFoundException e) {
             System.out.println("Driver not found");
         }
-
+        //Use a set to add manager SSNs because there could be doubles in query
         Set<String> managers = new HashSet<String>();
 
         Connection conn = DriverManager.getConnection(
@@ -60,6 +72,7 @@ public class cs450_part2_GUI extends Application
         Statement s = conn.createStatement();
         ResultSet r = s.executeQuery(stmnt);
 
+        // Add manager SSNs to set
         while (r.next()) {
             managers.add(r.getString(1));
         }
@@ -103,7 +116,14 @@ public class cs450_part2_GUI extends Application
         button.setOnAction(event);
     }
 
-
+    /***
+     * If manager chooses create new employee, pass them to next function
+     * Otherwise, exit
+     *
+     * @param stage
+     * @param fname Manager First Name
+     * @param lname Manager Last Name
+     */
     public void options(Stage stage, String fname, String lname)
     {
         Label label = new Label("Welcome " + fname + " " + lname );
@@ -135,6 +155,13 @@ public class cs450_part2_GUI extends Application
         b2.setOnAction(event1);
     }
 
+    /***
+     * Provide textfields for the manager to enter in employee
+     * information. Then send information to be entered into the database.
+     *
+     * @param stage
+     * @return Employee object with created Employee information
+     */
     public Employee createEmployee(Stage stage)
     {
         Label fnameLabel = new Label("First Name");
@@ -193,7 +220,10 @@ public class cs450_part2_GUI extends Application
 
             try
             {
+                //try to add to database/look for a SSN conflict
                 addToDB(employee);
+                //If the dependent box was clicked, send to the dependent entry window
+                //Else send straight to the project allocation page
                 if(depBox.isSelected())
                 {
                     addDependent(stage, employee);
@@ -214,6 +244,12 @@ public class cs450_part2_GUI extends Application
         return employee;
     }
 
+    /***
+     * Add our employee to the database
+     *
+     * @param emp
+     * @throws SQLException
+     */
     public void addToDB(Employee emp) throws SQLException {
         Connection conn = DriverManager.getConnection(
                 "jdbc:oracle:thin:@artemis.vsnet.gmu.edu:1521/vse18c.vsnet.gmu.edu",
@@ -229,6 +265,14 @@ public class cs450_part2_GUI extends Application
 
     }
 
+    /**
+     * If employee has a dependent, enter that information
+     * in here.
+     *
+     * @param stage
+     * @param emp
+     * @throws SQLException
+     */
     public void addDependent(Stage stage, Employee emp) throws SQLException {
         Label dnameLabel = new Label("Dependent Name");
         Label sexLabel = new Label("Sex");
@@ -272,6 +316,7 @@ public class cs450_part2_GUI extends Application
 
                 Statement s = conn.createStatement();
                 ResultSet r = s.executeQuery(stmnt);
+                //move to next window
                 addProjects(stage, emp);
             }
             catch (SQLException ex)
@@ -283,6 +328,13 @@ public class cs450_part2_GUI extends Application
         b.setOnAction(event);
 }
 
+    /**
+     * Allocate projects to the employee
+     *
+     * @param stage
+     * @param emp
+     * @throws SQLException
+     */
     public void addProjects(Stage stage, Employee emp) throws SQLException
     {
         Label proj = new Label("Projects");
@@ -325,6 +377,7 @@ public class cs450_part2_GUI extends Application
                         "jdbc:oracle:thin:@artemis.vsnet.gmu.edu:1521/vse18c.vsnet.gmu.edu",
                         "mhayes24", "sibeegee");
                 double total = 0;
+                //handle for blank textfields on button click
                 if(!(xTxt.getText().isEmpty())){total+=Double.parseDouble(xTxt.getText());}
                 if(!(yTxt.getText().isEmpty())){total+=Double.parseDouble(yTxt.getText());}
                 if(!(zTxt.getText().isEmpty())){total+=Double.parseDouble(zTxt.getText());}
@@ -332,11 +385,16 @@ public class cs450_part2_GUI extends Application
                 if(!(reorgTxt.getText().isEmpty())){total+=Double.parseDouble(reorgTxt.getText());}
                 if(!(newTxt.getText().isEmpty())){total+=Double.parseDouble(newTxt.getText());}
 
+                //handle for error of over 40 hours entered
                 if(total > 40.0)
                 {
                     over40(stage, emp);
                 }
                 else {
+                    /***
+                     * Here we're only going to query the project
+                     * textbox if something was actually entered in
+                     */
                     if (!(xTxt.getText().isEmpty())) {
                         String stmnt = "insert into Works_On (Essn, Pno, Hours) " +
                                 "values ('" + emp.getSSN() + "', 1 ,'" + xTxt.getText() + "')";
@@ -384,7 +442,7 @@ public class cs450_part2_GUI extends Application
                         Statement s = conn.createStatement();
                         ResultSet r = s.executeQuery(stmnt);
                     }
-
+                    //move to print out window
                     printOut(stage, emp);
                 }
             }
@@ -397,6 +455,14 @@ public class cs450_part2_GUI extends Application
         b.setOnAction(event);
     }
 
+    /***
+     * If an employee was assigned more than 40 hours,
+     * we handle that here. Print out an error and
+     * move back to last window.
+     *
+     * @param stage
+     * @param emp
+     */
     public void over40(Stage stage, Employee emp)
     {
         Label label = new Label("Error: Please enter 40 or less hours");
@@ -420,6 +486,15 @@ public class cs450_part2_GUI extends Application
         };
         b.setOnAction(event);
     }
+
+    /***
+     * Query the database for our employee to check if they were added
+     * correctly. Print out on successful query.
+     *
+     * @param stage
+     * @param emp
+     * @throws SQLException
+     */
     public void printOut(Stage stage, Employee emp) throws SQLException {
 
         String fname = "", minit = "", lname = "", ssn = "", bdate = "", address = "", sex = "", superssn = "";

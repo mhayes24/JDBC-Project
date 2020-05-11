@@ -1,16 +1,29 @@
-// Mike Hayes
-// G#01165321
-
+/**
+ * Employee Class
+ *
+ */
 public class Employee
 {
     String fname, minit, lname, SSN, bdate, address, sex, superssn;
     int dNo;
     double salary;
 
+    /**
+     * Default Constructor
+     *
+     */
     public Employee()
     {
     }
 
+    /**
+     * Constructor for Employee class
+     *
+     * @param fname First name of employee
+     * @param lname Last name of employee
+     * @param SSN SSN of employee
+     * @param dNo Dept Number of employee
+     */
     public Employee(String fname, String lname, String SSN, int dNo)
     {
         this.fname = fname;
